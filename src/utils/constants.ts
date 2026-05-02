@@ -107,6 +107,10 @@ export const Devs = /* #__PURE__*/ Object.freeze({
         name: "rushii",
         id: 295190422244950017n
     },
+    coll: {
+        name: "stealingweed",
+        id: 1058459294640648192n
+    },
     Glitch: {
         name: "Glitchy",
         id: 269567451199569920n
