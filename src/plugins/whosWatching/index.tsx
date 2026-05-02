@@ -71,7 +71,7 @@ const AvatarStyles = findCssClassesLazy("moreUsers", "clickableAvatar", "avatar"
 export default definePlugin({
     name: "WhosWatching",
     description: "Hover over the screenshare icon to view what users are watching your stream",
-    authors: [Devs.Fres],
+    authors: [Devs.viciouscal],
     settings: settings,
     patches: [
         {
