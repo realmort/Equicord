@@ -123,12 +123,11 @@ jobs:
               run: |
                   BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
                   COMMIT_SHA=$(git rev-parse --short HEAD)
-                  cd equibuilds
                   gh release delete "$BRANCH" --yes --repo realmort/Equicord-devbuild 2>/dev/null || true
                   gh release create "$BRANCH" \
                     --title "$BRANCH" \
                     --notes "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$COMMIT_SHA" \
                     --repo realmort/Equicord-devbuild \
-                    $(find . -type f ! -path './.git/*' | tr '\n' ' ')
+                    $(find equibuilds -type f ! -path 'equibuilds/.git/*' | tr '\n' ' ')
               env:
                   GH_TOKEN: ${{ secrets.PAT_TOKEN }}
