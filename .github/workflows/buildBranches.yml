@@ -95,20 +95,11 @@ jobs:
                   BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
                   COMMIT_SHA=$(git rev-parse --short HEAD)
                   gh release delete "$BRANCH" --yes --repo realmort/Equicord-devbuild 2>/dev/null || true
+                  FILES=$(find dist -type f ! -name "*.map" ! -name "package.json" ! -path "*/chromium-unpacked/*" ! -path "*/firefox-unpacked/*" | tr '\n' ' ')
                   gh release create "$BRANCH" \
                     --title "$BRANCH" \
                     --notes "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$COMMIT_SHA" \
                     --repo realmort/Equicord-devbuild \
-                    dist/desktop.asar \
-                    dist/equibop.asar \
-                    dist/plugins.json \
-                    dist/equicordplugins.json \
-                    dist/vencordplugins.json \
-                    dist/devs.json \
-                    dist/Equicord.user.js \
-                    dist/Equicord.user.css \
-                    $(find dist/browser -type f | tr '\n' ' ') \
-                    $(find dist/desktop -type f | tr '\n' ' ') \
-                    $(find dist/equibop -type f | tr '\n' ' ') 2>/dev/null || true
+                    $FILES
               env:
                   GH_TOKEN: ${{ secrets.PAT_TOKEN }}
