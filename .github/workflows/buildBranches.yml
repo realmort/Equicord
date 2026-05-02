@@ -18,7 +18,7 @@ on:
 env:
     FORCE_COLOR: true
     GITHUB_TOKEN: ${{ secrets.ETOKEN }}
-    REPO: realmort/Equibuilds
+    REPO: realmort/Equibored-devbuild
     USERNAME: GitHub-Actions
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
     Build:
         name: Build Equicord
         runs-on: ubuntu-latest
-        if: github.repository == 'realmort/Equicord'
+        if: github.repository == 'realmort/Equibored'
 
         steps:
             - uses: actions/checkout@v4
@@ -69,6 +69,7 @@ jobs:
               if: github.ref_name == 'bun'
               with:
                   bun-version: latest
+
             - name: Install dependencies
               if: github.ref_name == 'bun'
               run: bun install
@@ -89,7 +90,7 @@ jobs:
                   bun run generateVencordPluginJson dist/vencordplugins.json
                   bun run generateDevsList dist/devs.json
 
-            - name: Upload to Equibuilds repo
+            - name: Upload to Equibored-devbuild repo
               run: |
                   BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
                   COMMIT_SHA=$(git rev-parse --short HEAD)
