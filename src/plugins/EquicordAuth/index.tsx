@@ -5,9 +5,7 @@
  */
 
 import definePlugin from "@utils/types";
-import { React } from "@webpack/common";
 import { Devs } from "@utils/constants";
-
 const SERVER_URL = "https://equicord-server.onrender.com";
 
 function getHWID(): string {
@@ -39,87 +37,94 @@ function getHWID(): string {
     return `EQ-${Math.abs(hash).toString(16).toUpperCase().padStart(8, "0")}`;
 }
 
-function BlockScreen({ hwid }: { hwid: string; }) {
-    const [copied, setCopied] = React.useState(false);
+function showBlockScreen(hwid: string) {
+    if (document.getElementById("equicord-auth-block")) return;
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(hwid);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+    const div = document.createElement("div");
+    div.id = "equicord-auth-block";
+    div.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: #1e1f22;
+            z-index: 99999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: gg sans, Noto Sans, sans-serif;
+        ">
+            <div style="
+                background-color: #2b2d31;
+                border-radius: 16px;
+                padding: 48px 64px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 24px;
+                max-width: 480px;
+                width: 90%;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            ">
+                <div style="
+                    width: 80px; height: 80px;
+                    background-color: #ec4144;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 40px;
+                ">🔒</div>
 
-    return (
-        <div style={{
-            position: "fixed",
-            top: 0, left: 0,
-            width: "100vw", height: "100vh",
-            backgroundColor: "#1e1f22",
-            zIndex: 99999999,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "gg sans, Noto Sans, sans-serif",
-        }}>
-            <div style={{
-                backgroundColor: "#2b2d31",
-                borderRadius: "16px",
-                padding: "48px 64px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "24px",
-                maxWidth: "480px",
-                width: "90%",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-            }}>
-                <div style={{
-                    width: "80px", height: "80px",
-                    backgroundColor: "#ec4144",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "40px",
-                }}>🔒</div>
-
-                <div style={{ fontSize: "24px", fontWeight: 700, color: "#ffffff" }}>
+                <div style="font-size: 24px; font-weight: 700; color: #ffffff;">
                     Not Activated
                 </div>
 
-                <div style={{ fontSize: "14px", color: "#b5bac1", textAlign: "center", lineHeight: 1.6 }}>
-                    This version of Equicord is not activated on your device.<br />
+                <div style="font-size: 14px; color: #b5bac1; text-align: center; line-height: 1.6;">
+                    This version of Equicord is not activated on your device.<br/>
                     Contact the developer to get access.
                 </div>
 
-                <div style={{
-                    backgroundColor: "#1e1f22",
-                    borderRadius: "8px",
-                    padding: "12px 20px",
-                    fontFamily: "monospace",
-                    fontSize: "16px",
-                    color: "#5865f2",
-                    letterSpacing: "2px",
-                    border: "1px solid #3f4147",
-                }}>{hwid}</div>
+                <div style="
+                    background-color: #1e1f22;
+                    border-radius: 8px;
+                    padding: 12px 20px;
+                    font-family: monospace;
+                    font-size: 16px;
+                    color: #5865f2;
+                    letter-spacing: 2px;
+                    border: 1px solid #3f4147;
+                ">${hwid}</div>
 
-                <button
-                    onClick={handleCopy}
-                    style={{
-                        backgroundColor: "#5865f2",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: "8px",
-                        padding: "10px 24px",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                    }}>
-                    {copied ? "✅ Copied!" : "Copy HWID"}
-                </button>
+                <button id="equicord-copy-btn" style="
+                    background-color: #5865f2;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 10px 24px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                ">Copy HWID</button>
             </div>
         </div>
-    );
+    `;
+
+    document.body.appendChild(div);
+
+    document.getElementById("equicord-copy-btn")?.addEventListener("click", () => {
+        navigator.clipboard.writeText(hwid);
+        const btn = document.getElementById("equicord-copy-btn");
+        if (btn) {
+            btn.textContent = "✅ Copied!";
+            setTimeout(() => { btn.textContent = "Copy HWID"; }, 2000);
+        }
+    });
+}
+
+function removeBlockScreen() {
+    document.getElementById("equicord-auth-block")?.remove();
 }
 
 export default definePlugin({
@@ -139,7 +144,7 @@ export default definePlugin({
 
     stop() {
         if (this.intervalId) clearInterval(this.intervalId);
-        this.removeBlockScreen();
+        removeBlockScreen();
     },
 
     async checkActivation() {
@@ -147,27 +152,12 @@ export default definePlugin({
             const res = await fetch(`${SERVER_URL}/check/${this.hwid}`);
             const data = await res.json();
             if (data.activated) {
-                this.removeBlockScreen();
+                removeBlockScreen();
             } else {
-                this.showBlockScreen();
+                showBlockScreen(this.hwid);
             }
         } catch {
             // لو السيرفر ما رد نفضل على الحالة الحالية
         }
-    },
-
-    showBlockScreen() {
-        if (document.getElementById("equicord-auth-block")) return;
-        const div = document.createElement("div");
-        div.id = "equicord-auth-block";
-        document.body.appendChild(div);
-
-        const root = (window as any).ReactDOM.createRoot(div);
-        root.render(React.createElement(BlockScreen, { hwid: this.hwid }));
-    },
-
-    removeBlockScreen() {
-        const el = document.getElementById("equicord-auth-block");
-        if (el) el.remove();
     },
 });
