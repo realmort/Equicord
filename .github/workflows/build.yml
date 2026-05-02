@@ -5,11 +5,6 @@ on:
         branches:
             - main
 
-env:
-    FORCE_COLOR: true
-    GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-    REPO: realmort/Equicord-devbuild
-
 permissions:
     contents: write
 
@@ -58,23 +53,24 @@ jobs:
                     cp "$file" "release/equibop${filename^}"
                   done
 
-            - name: Upload to Equibuilds repo
+            - name: Deploy to Equicord-devbuild
               run: |
-                  BRANCH="main"
                   COMMIT_SHA=$(git rev-parse --short HEAD)
 
                   git config --global user.name "GitHub-Actions"
                   git config --global user.email actions@github.com
 
-                  git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git equibuilds
-                  cd equibuilds
+                  git clone https://x-access-token:${GITHUB_TOKEN}@github.com/realmort/Equicord-devbuild.git deploy
+                  cd deploy
 
-                  git checkout main || git checkout -b main
+                  rm -rf *
 
                   cp -r ../dist/* .
 
                   git add -A
 
-                  git commit -m "Builds for $COMMIT_SHA" || echo "No changes to commit"
+                  git commit -m "Build $COMMIT_SHA" || echo "No changes"
 
                   git push origin main
+              env:
+                  GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
