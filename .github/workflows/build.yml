@@ -5,9 +5,9 @@ on:
             - main
 env:
     FORCE_COLOR: true
-    GITHUB_TOKEN: ${{ github.token }}
+    GITHUB_TOKEN: ${{ secrets.ETOKEN }}
     REPO: realmort/Equibored
-    USERNAME: GitHub-Actions
+    USERNAME: realmort
 permissions:
     contents: write
 jobs:
@@ -53,11 +53,11 @@ jobs:
               run: |
                   gh release upload latest --clobber dist/release/*
               env:
-                  GH_TOKEN: ${{ github.token }}
+                  GH_TOKEN: ${{ secrets.ETOKEN }}
             - name: Upload Plugin JSONs to Equibored repo
               if: github.repository == 'realmort/Equicord'
               run: |
-                  git config --global user.name "GitHub-Actions"
+                  git config --global user.name "realmort"
                   git config --global user.email actions@github.com
                   git clone https://$USERNAME:$GITHUB_TOKEN@github.com/$REPO.git plugins
                   cd plugins
