@@ -40,7 +40,7 @@ jobs:
                   pnpm generateVencordPluginJson dist/vencordplugins.json
                   pnpm generateDevsList dist/devs.json
 
-            - name: Collect files to release
+            - name: Collect files
               run: |
                   cd dist
                   mkdir release
@@ -53,13 +53,25 @@ jobs:
                     cp "$file" "release/equibop${filename^}"
                   done
 
-            - name: Create GitHub Release in devbuild
-              uses: softprops/action-gh-release@v2
-              with:
-                  repository: realmort/Equicord-devbuild
-                  tag_name: latest
-                  name: Latest Build
-                  files: dist/release/*
-                  overwrite_files: true
+            - name: Push to Equicord-devbuild
+              run: |
+                  COMMIT_SHA=$(git rev-parse --short HEAD)
+
+                  git config --global user.name "GitHub-Actions"
+                  git config --global user.email actions@github.com
+
+                  git clone https://x-access-token:${PAT}@github.com/realmort/Equicord-devbuild.git deploy
+                  cd deploy
+
+                  git checkout main || git checkout -b main
+
+                  rm -rf ./*
+                  cp -r ../dist/* .
+
+                  git add -A
+
+                  git commit -m "Build $COMMIT_SHA" || echo "No changes"
+
+                  git push origin main
               env:
-                  GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+                  PAT: ${{ secrets.PAT_TOKEN }}
