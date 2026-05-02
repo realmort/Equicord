@@ -1,14 +1,9 @@
 name: Release
+
 on:
     push:
         branches:
             - main
-
-env:
-    FORCE_COLOR: true
-    GITHUB_TOKEN: ${{ secrets.ETOKEN }}
-    REPO: realmort/Equibored-devbuild
-    USERNAME: realmort
 
 permissions:
     contents: write
@@ -45,7 +40,7 @@ jobs:
                   pnpm generateVencordPluginJson dist/vencordplugins.json
                   pnpm generateDevsList dist/devs.json
 
-            - name: Collect files to be released
+            - name: Collect files
               run: |
                   cd dist
                   mkdir release
@@ -57,15 +52,14 @@ jobs:
                     filename=$(basename "$file")
                     cp "$file" "release/equibop${filename^}"
                   done
-                  find release -size 0 -delete
-                  rm release/package.json
-                  rm release/*.map
 
-            - name: Create GitHub Release
+            - name: Create Release in devbuild repo
               uses: softprops/action-gh-release@v2
               with:
+                  repository: realmort/Equicord-devbuild
                   tag_name: latest
                   name: Latest Build
                   files: dist/release/*
+                  overwrite_files: true
               env:
-                  GITHUB_TOKEN: ${{ secrets.ETOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
