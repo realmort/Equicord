@@ -18,7 +18,7 @@ on:
 env:
     FORCE_COLOR: true
     GITHUB_TOKEN: ${{ secrets.ETOKEN }}
-    REPO: realmort/Equibored-devbuild
+    REPO: realmort/Equicord-devbuild
     USERNAME: GitHub-Actions
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
     Build:
         name: Build Equicord
         runs-on: ubuntu-latest
-        if: github.repository == 'realmort/Equibored'
+        if: github.repository == 'realmort/Equicord'
 
         steps:
             - uses: actions/checkout@v4
@@ -90,7 +90,7 @@ jobs:
                   bun run generateVencordPluginJson dist/vencordplugins.json
                   bun run generateDevsList dist/devs.json
 
-            - name: Upload to Equibored-devbuild repo
+            - name: Upload to Equicord-devbuild repo
               run: |
                   BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
                   COMMIT_SHA=$(git rev-parse --short HEAD)
@@ -110,10 +110,10 @@ jobs:
                   find . -size 0 -delete
 
                   mkdir -p userscript
-                  mv Equicord.user.* userscript/
-                  mv desktop.asar desktop/
-                  mv equibop.asar equibop/
-                  mv extension-*.zip browser/
+                  mv Equicord.user.* userscript/ 2>/dev/null || true
+                  mv desktop.asar desktop/ 2>/dev/null || true
+                  mv equibop.asar equibop/ 2>/dev/null || true
+                  mv extension-*.zip browser/ 2>/dev/null || true
 
                   git add -A
 
