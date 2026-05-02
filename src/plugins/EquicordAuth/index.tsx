@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { definePlugin } from "@utils/types";
+import definePlugin from "@utils/types";
 import { React } from "@webpack/common";
 
 const SERVER_URL = "https://equicord-server.onrender.com";
