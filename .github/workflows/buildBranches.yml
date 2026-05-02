@@ -18,7 +18,7 @@ on:
 env:
     FORCE_COLOR: true
     GITHUB_TOKEN: ${{ secrets.ETOKEN }}
-    REPO: Equicord/Equibuilds
+    REPO: realmort/Equibuilds
     USERNAME: GitHub-Actions
 
 permissions:
