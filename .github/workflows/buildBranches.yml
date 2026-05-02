@@ -114,8 +114,8 @@ jobs:
                     dist/Equicord.user.js \
                     dist/Equicord.user.js.LEGAL.txt \
                     dist/equicordplugins.json \
-                    dist/browser/extension-chrome.zip \
-                    dist/browser/extension-firefox.zip \
+                    dist/extension-chrome.zip \
+                    dist/extension-firefox.zip \
                     dist/desktop/patcher.js \
                     dist/desktop/patcher.js.LEGAL.txt \
                     dist/plugins.json \
