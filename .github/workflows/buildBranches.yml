@@ -17,7 +17,7 @@ on:
 
 env:
     FORCE_COLOR: true
-    GITHUB_TOKEN: ${{ secrets.ETOKEN }}
+    GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
     REPO: realmort/Equicord-devbuild
     USERNAME: GitHub-Actions
 
@@ -116,6 +116,19 @@ jobs:
                   mv extension-*.zip browser/ 2>/dev/null || true
 
                   git add -A
-
                   git commit -m "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$COMMIT_SHA"
                   git push --force https://$USERNAME:$GITHUB_TOKEN@github.com/$REPO.git "$BRANCH"
+
+            - name: Create Release in Equicord-devbuild
+              run: |
+                  BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
+                  COMMIT_SHA=$(git rev-parse --short HEAD)
+                  cd equibuilds
+                  gh release delete "$BRANCH" --yes --repo realmort/Equicord-devbuild 2>/dev/null || true
+                  gh release create "$BRANCH" \
+                    --title "$BRANCH" \
+                    --notes "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$COMMIT_SHA" \
+                    --repo realmort/Equicord-devbuild \
+                    $(find . -type f ! -path './.git/*' | tr '\n' ' ')
+              env:
+                  GH_TOKEN: ${{ secrets.PAT_TOKEN }}
