@@ -1,5 +1,4 @@
 name: Build Branches
-
 on:
     push:
         branches:
@@ -14,49 +13,39 @@ on:
                     - dev
                     - translation
                 default: "dev"
-
 env:
     FORCE_COLOR: true
     GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
     REPO: realmort/Equicord-devbuild
     USERNAME: GitHub-Actions
-
 permissions:
     contents: write
-
 jobs:
     Build:
         name: Build Equicord
         runs-on: ubuntu-latest
         if: github.repository == 'realmort/Equicord'
-
         steps:
             - uses: actions/checkout@v4
               with:
                   ref: ${{ github.event.inputs.branch || github.ref }}
-
             - uses: pnpm/action-setup@v3
               if: github.ref_name != 'bun'
-
             - name: Use Node.js 24
               if: github.ref_name != 'bun'
               uses: actions/setup-node@v4
               with:
                   node-version: 24
                   cache: "pnpm"
-
             - name: Install dependencies
               if: github.ref_name != 'bun'
               run: pnpm install --frozen-lockfile
-
             - name: Build web
               if: github.ref_name != 'bun'
               run: pnpm buildWebStandalone
-
             - name: Build
               if: github.ref_name != 'bun'
               run: pnpm buildStandalone
-
             - name: Generate plugin lists
               if: github.ref_name != 'bun'
               run: |
@@ -64,24 +53,19 @@ jobs:
                   pnpm generateEquicordPluginJson dist/equicordplugins.json
                   pnpm generateVencordPluginJson dist/vencordplugins.json
                   pnpm generateDevsList dist/devs.json
-
             - uses: oven-sh/setup-bun@v2
               if: github.ref_name == 'bun'
               with:
                   bun-version: latest
-
             - name: Install dependencies
               if: github.ref_name == 'bun'
               run: bun install
-
             - name: Build web
               if: github.ref_name == 'bun'
               run: bun run buildWebStandalone
-
             - name: Build
               if: github.ref_name == 'bun'
               run: bun run buildStandalone
-
             - name: Generate plugin lists
               if: github.ref_name == 'bun'
               run: |
@@ -89,8 +73,22 @@ jobs:
                   bun run generateEquicordPluginJson dist/equicordplugins.json
                   bun run generateVencordPluginJson dist/vencordplugins.json
                   bun run generateDevsList dist/devs.json
-
-            - name: Create Release in Equicord-devbuild
+            - name: Collect files to be released
+              run: |
+                  cd dist
+                  mkdir release
+                  cp browser/browser.* release
+                  cp Equicord.user.{js,js.LEGAL.txt} release
+                  cp *.{json,zip,asar} release
+                  cp desktop/* release
+                  for file in equibop/*; do
+                    filename=$(basename "$file")
+                    cp "$file" "release/equibop${filename^}"
+                  done
+                  find release -size 0 -delete
+                  rm release/package.json
+                  rm release/*.map
+            - name: Upload to Equicord-devbuild
               run: |
                   BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
                   COMMIT_SHA=$(git rev-parse --short HEAD)
@@ -99,30 +97,6 @@ jobs:
                     --title "$BRANCH" \
                     --notes "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$COMMIT_SHA" \
                     --repo realmort/Equicord-devbuild \
-                    dist/browser/browser.css \
-                    dist/browser/browser.js \
-                    dist/browser/browser.js.LEGAL.txt \
-                    dist/desktop.asar \
-                    dist/equibop.asar \
-                    dist/devs.json \
-                    dist/equibop/main.js \
-                    dist/equibop/main.js.LEGAL.txt \
-                    dist/equibop/preload.js \
-                    dist/equibop/renderer.css \
-                    dist/equibop/renderer.js \
-                    dist/equibop/renderer.js.LEGAL.txt \
-                    dist/Equicord.user.js \
-                    dist/Equicord.user.js.LEGAL.txt \
-                    dist/equicordplugins.json \
-                    dist/extension-chrome.zip \
-                    dist/extension-firefox.zip \
-                    dist/desktop/patcher.js \
-                    dist/desktop/patcher.js.LEGAL.txt \
-                    dist/plugins.json \
-                    dist/desktop/preload.js \
-                    dist/desktop/renderer.css \
-                    dist/desktop/renderer.js \
-                    dist/desktop/renderer.js.LEGAL.txt \
-                    dist/vencordplugins.json
+                    dist/release/*
               env:
                   GH_TOKEN: ${{ secrets.PAT_TOKEN }}
