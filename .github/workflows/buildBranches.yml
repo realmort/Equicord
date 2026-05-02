@@ -28,7 +28,7 @@ jobs:
     Build:
         name: Build Equicord
         runs-on: ubuntu-latest
-        if: github.repository == 'realmort/Equicord'
+        if: github.repository == 'Equicord/Equicord'
 
         steps:
             - uses: actions/checkout@v4
