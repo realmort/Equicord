@@ -6,6 +6,7 @@
 
 import definePlugin from "@utils/types";
 import { React } from "@webpack/common";
+import { Devs } from "@utils/constants";
 
 const SERVER_URL = "https://equicord-server.onrender.com";
 
@@ -124,7 +125,7 @@ function BlockScreen({ hwid }: { hwid: string; }) {
 export default definePlugin({
     name: "EquicordAuth",
     description: "Equicord Authentication",
-    authors: [{ name: "Equicord", id: 0n }],
+    authors: [Devs.unknown],
     required: true,
 
     hwid: "",
