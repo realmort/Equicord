@@ -95,11 +95,34 @@ jobs:
                   BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
                   COMMIT_SHA=$(git rev-parse --short HEAD)
                   gh release delete "$BRANCH" --yes --repo realmort/Equicord-devbuild 2>/dev/null || true
-                  FILES=$(find dist -type f ! -name "*.map" ! -name "package.json" ! -path "*/chromium-unpacked/*" ! -path "*/firefox-unpacked/*" | tr '\n' ' ')
                   gh release create "$BRANCH" \
                     --title "$BRANCH" \
                     --notes "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$COMMIT_SHA" \
                     --repo realmort/Equicord-devbuild \
-                    $FILES
+                    dist/browser/browser.css \
+                    dist/browser/browser.js \
+                    dist/browser/browser.js.LEGAL.txt \
+                    dist/desktop.asar \
+                    dist/equibop.asar \
+                    dist/devs.json \
+                    dist/equibop/main.js \
+                    dist/equibop/main.js.LEGAL.txt \
+                    dist/equibop/preload.js \
+                    dist/equibop/renderer.css \
+                    dist/equibop/renderer.js \
+                    dist/equibop/renderer.js.LEGAL.txt \
+                    dist/Equicord.user.js \
+                    dist/Equicord.user.js.LEGAL.txt \
+                    dist/equicordplugins.json \
+                    dist/browser/extension-chrome.zip \
+                    dist/browser/extension-firefox.zip \
+                    dist/desktop/patcher.js \
+                    dist/desktop/patcher.js.LEGAL.txt \
+                    dist/plugins.json \
+                    dist/desktop/preload.js \
+                    dist/desktop/renderer.css \
+                    dist/desktop/renderer.js \
+                    dist/desktop/renderer.js.LEGAL.txt \
+                    dist/vencordplugins.json
               env:
                   GH_TOKEN: ${{ secrets.PAT_TOKEN }}
