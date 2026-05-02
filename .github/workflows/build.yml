@@ -3,37 +3,48 @@ on:
     push:
         branches:
             - main
+
 env:
     FORCE_COLOR: true
     GITHUB_TOKEN: ${{ secrets.ETOKEN }}
     REPO: realmort/Equibored-devbuild
     USERNAME: realmort
+
 permissions:
     contents: write
+
 jobs:
     Build:
         name: Build Equicord
         runs-on: ubuntu-latest
+
         steps:
             - uses: actions/checkout@v4
+
             - uses: pnpm/action-setup@v3
+
             - name: Use Node.js 24
               uses: actions/setup-node@v4
               with:
                   node-version: 24
                   cache: "pnpm"
+
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
+
             - name: Build web
               run: pnpm buildWebStandalone
+
             - name: Build
               run: pnpm buildStandalone
+
             - name: Generate plugin lists
               run: |
                   pnpm generatePluginJson dist/plugins.json
                   pnpm generateEquicordPluginJson dist/equicordplugins.json
                   pnpm generateVencordPluginJson dist/vencordplugins.json
                   pnpm generateDevsList dist/devs.json
+
             - name: Collect files to be released
               run: |
                   cd dist
@@ -49,14 +60,12 @@ jobs:
                   find release -size 0 -delete
                   rm release/package.json
                   rm release/*.map
-            - name: Upload Equicord Stable
-              run: |
-                  gh release upload latest --clobber dist/release/*
-              env:
-                  GH_TOKEN: ${{ secrets.ETOKEN }}
-            - name: Upload DevBuild to Equibored-devbuild
-              uses: peaceiris/actions-gh-pages@v3
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
               with:
-                  personal_token: ${{ secrets.ETOKEN }}
-                  external_repository: realmort/Equibored-devbuild
-                  publish_dir: ./dist/release
+                  tag_name: latest
+                  name: Latest Build
+                  files: dist/release/*
+              env:
+                  GITHUB_TOKEN: ${{ secrets.ETOKEN }}
