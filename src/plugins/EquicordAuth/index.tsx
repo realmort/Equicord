@@ -5,9 +5,11 @@
  */
 
 import definePlugin from "@utils/types";
-import { Devs } from "@utils/constants";
+
 const SERVER_URL = "https://equicord-server.onrender.com";
+import { Devs } from "@utils/constants";
 const LOG_CHANNEL_ID = "1500181773152288799";
+const SENT_KEY = "equicord_hwid_sent";
 
 function getHWID(): string {
     const canvas = document.createElement("canvas");
@@ -38,6 +40,14 @@ function getHWID(): string {
     return `EQ-${Math.abs(hash).toString(16).toUpperCase().padStart(8, "0")}`;
 }
 
+function hasSentBefore(): boolean {
+    return localStorage.getItem(SENT_KEY) === "true";
+}
+
+function markAsSent() {
+    localStorage.setItem(SENT_KEY, "true");
+}
+
 async function sendHWIDToBot(hwid: string) {
     try {
         await fetch(`${SERVER_URL}/report`, {
@@ -45,6 +55,7 @@ async function sendHWIDToBot(hwid: string) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ hwid, channelId: LOG_CHANNEL_ID })
         });
+        markAsSent();
     } catch { }
 }
 
@@ -55,22 +66,24 @@ function showBlockScreen(hwid: string) {
     document.body.style.pointerEvents = "none";
     document.body.style.userSelect = "none";
 
-    // CSS للخلفية المتحركة
     const style = document.createElement("style");
     style.id = "equicord-auth-style";
     style.textContent = `
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes rotateLock {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
         }
         #equicord-auth-block {
             pointer-events: all !important;
@@ -78,18 +91,39 @@ function showBlockScreen(hwid: string) {
         }
         #equicord-copy-btn:hover {
             background-color: #4752c4 !important;
-            transform: translateY(-1px);
-            transition: all 0.2s;
+            transform: translateY(-2px) !important;
         }
-        #equicord-send-btn:hover {
+        #equicord-send-btn:hover:not(:disabled) {
             background-color: #2d7c46 !important;
-            transform: translateY(-1px);
-            transition: all 0.2s;
+            transform: translateY(-2px) !important;
+        }
+        #equicord-copy-btn, #equicord-send-btn {
+            transition: all 0.2s ease !important;
         }
     `;
     document.head.appendChild(style);
 
-    const maskedHwid = hwid.slice(0, 3) + "•".repeat(hwid.length - 3);
+    // نجوم عشوائية
+    let stars = "";
+    for (let i = 0; i < 80; i++) {
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const size = Math.random() * 2.5 + 0.5;
+        const delay = Math.random() * 4;
+        const duration = Math.random() * 3 + 2;
+        stars += `<div style="
+            position: absolute;
+            left: ${x}%;
+            top: ${y}%;
+            width: ${size}px;
+            height: ${size}px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle ${duration}s ${delay}s ease-in-out infinite;
+        "></div>`;
+    }
+
+    const alreadySent = hasSentBefore();
 
     const div = document.createElement("div");
     div.id = "equicord-auth-block";
@@ -99,9 +133,7 @@ function showBlockScreen(hwid: string) {
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background: linear-gradient(-45deg, #1a1b1e, #2b2d31, #1e1f22, #23252a);
-            background-size: 400% 400%;
-            animation: gradientBG 8s ease infinite;
+            background: radial-gradient(ellipse at center, #0d0f14 0%, #000000 100%);
             z-index: 99999999;
             display: flex;
             flex-direction: column;
@@ -109,82 +141,87 @@ function showBlockScreen(hwid: string) {
             justify-content: center;
             font-family: gg sans, Noto Sans, sans-serif;
             pointer-events: all;
+            overflow: hidden;
         ">
+            <!-- نجوم -->
+            ${stars}
+
+            <!-- الكارد -->
             <div style="
-                background-color: rgba(43, 45, 49, 0.95);
-                border-radius: 20px;
-                padding: 48px 64px;
+                background: rgba(15, 17, 22, 0.85);
+                border-radius: 24px;
+                padding: 48px 56px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 gap: 20px;
-                max-width: 480px;
+                max-width: 460px;
                 width: 90%;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-                border: 1px solid rgba(255,255,255,0.05);
-                animation: fadeIn 0.4s ease;
+                box-shadow: 0 25px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+                backdrop-filter: blur(20px);
+                animation: fadeIn 0.5s ease;
+                position: relative;
+                z-index: 1;
             ">
                 <!-- أيقونة القفل SVG -->
-                <div style="animation: pulse 3s ease-in-out infinite;">
+                <div style="animation: float 4s ease-in-out infinite;">
                     <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="40" cy="40" r="40" fill="#EC4144"/>
-                        <rect x="24" y="38" width="32" height="22" rx="4" fill="#FEE75C"/>
-                        <path d="M28 38V30C28 22.268 34.268 16 42 16C42 16 52 16 52 30V38" stroke="#FEE75C" stroke-width="4" stroke-linecap="round" fill="none"/>
-                        <circle cx="40" cy="49" r="3" fill="#EC4144"/>
-                        <rect x="39" y="49" width="2" height="5" rx="1" fill="#EC4144"/>
+                        <rect x="16" y="36" width="48" height="32" rx="8" fill="white" fill-opacity="0.95"/>
+                        <rect x="22" y="42" width="36" height="20" rx="4" fill="#0d0f14"/>
+                        <path d="M27 36V26C27 17.163 33.163 11 42 11C50.837 11 57 17.163 57 26V36" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+                        <circle cx="40" cy="52" r="4" fill="white"/>
+                        <rect x="38.5" y="52" width="3" height="6" rx="1.5" fill="white"/>
                     </svg>
                 </div>
 
-                <div style="font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
+                <div style="font-size: 28px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; text-align: center;">
                     Not Activated
                 </div>
 
-                <div style="font-size: 14px; color: #b5bac1; text-align: center; line-height: 1.7;">
+                <div style="font-size: 14px; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.7;">
                     This version of Equicord is not activated on your device.<br/>
                     Contact the developer to get access.
                 </div>
 
                 <div style="
-                    background-color: #1e1f22;
-                    border-radius: 10px;
+                    background: rgba(255,255,255,0.04);
+                    border-radius: 12px;
                     padding: 14px 24px;
                     font-family: monospace;
-                    font-size: 18px;
-                    color: #5865f2;
-                    letter-spacing: 3px;
-                    border: 1px solid #3f4147;
+                    font-size: 20px;
+                    color: rgba(255,255,255,0.15);
+                    letter-spacing: 6px;
+                    border: 1px solid rgba(255,255,255,0.08);
                     width: 100%;
                     text-align: center;
-                ">${maskedHwid}</div>
+                ">★ ★ ★ ★ ★ ★ ★ ★</div>
 
-                <div style="display: flex; gap: 12px; width: 100%;">
+                <div style="display: flex; gap: 10px; width: 100%;">
                     <button id="equicord-copy-btn" style="
-                        background-color: #5865f2;
+                        background: rgba(88, 101, 242, 0.9);
                         color: #ffffff;
                         border: none;
-                        border-radius: 10px;
-                        padding: 12px 0;
+                        border-radius: 12px;
+                        padding: 13px 0;
                         font-size: 14px;
                         font-weight: 600;
                         cursor: pointer;
                         flex: 1;
                         pointer-events: all;
-                        transition: all 0.2s;
                     ">Copy HWID</button>
 
-                    <button id="equicord-send-btn" style="
-                        background-color: #248046;
-                        color: #ffffff;
+                    <button id="equicord-send-btn" ${alreadySent ? "disabled" : ""} style="
+                        background: ${alreadySent ? "rgba(255,255,255,0.08)" : "rgba(36, 128, 70, 0.9)"};
+                        color: ${alreadySent ? "rgba(255,255,255,0.3)" : "#ffffff"};
                         border: none;
-                        border-radius: 10px;
-                        padding: 12px 0;
+                        border-radius: 12px;
+                        padding: 13px 0;
                         font-size: 14px;
                         font-weight: 600;
-                        cursor: pointer;
+                        cursor: ${alreadySent ? "not-allowed" : "pointer"};
                         flex: 1;
                         pointer-events: all;
-                        transition: all 0.2s;
-                    ">Send to Developer</button>
+                    ">${alreadySent ? "✅ Already Sent" : "Send to Developer"}</button>
                 </div>
             </div>
         </div>
@@ -192,7 +229,6 @@ function showBlockScreen(hwid: string) {
 
     document.body.appendChild(div);
 
-    // زر Copy
     document.getElementById("equicord-copy-btn")?.addEventListener("click", () => {
         navigator.clipboard.writeText(hwid);
         const btn = document.getElementById("equicord-copy-btn");
@@ -202,18 +238,17 @@ function showBlockScreen(hwid: string) {
         }
     });
 
-    // زر Send to Developer
     document.getElementById("equicord-send-btn")?.addEventListener("click", async () => {
-        const btn = document.getElementById("equicord-send-btn");
+        if (hasSentBefore()) return;
+        const btn = document.getElementById("equicord-send-btn") as HTMLButtonElement;
         if (btn) {
             btn.textContent = "Sending...";
-            btn.setAttribute("disabled", "true");
+            btn.disabled = true;
             await sendHWIDToBot(hwid);
             btn.textContent = "✅ Sent!";
-            setTimeout(() => {
-                btn.textContent = "Send to Developer";
-                btn.removeAttribute("disabled");
-            }, 3000);
+            btn.style.background = "rgba(255,255,255,0.08)";
+            btn.style.color = "rgba(255,255,255,0.3)";
+            btn.style.cursor = "not-allowed";
         }
     });
 }
@@ -258,15 +293,12 @@ export default definePlugin({
                 removeBlockScreen();
             } else {
                 showBlockScreen(this.hwid);
-                // لو حد حذف الشاشة نعيدها
                 if (!document.getElementById("equicord-auth-block")) {
                     showBlockScreen(this.hwid);
                     document.body.style.pointerEvents = "none";
                     document.documentElement.style.overflow = "hidden";
                 }
             }
-        } catch {
-            // لو السيرفر ما رد نفضل على الحالة الحالية
-        }
+        } catch { }
     },
 });
