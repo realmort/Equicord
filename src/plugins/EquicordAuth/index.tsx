@@ -6,6 +6,7 @@
 
 import definePlugin from "@utils/types";
 import { Devs } from "@utils/constants";
+
 const SERVER_URL = "https://equicord-server.onrender.com";
 
 function getHWID(): string {
@@ -40,8 +41,16 @@ function getHWID(): string {
 function showBlockScreen(hwid: string) {
     if (document.getElementById("equicord-auth-block")) return;
 
+    // منع أي تفاعل مع Discord
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.pointerEvents = "none";
+    document.body.style.userSelect = "none";
+
     const div = document.createElement("div");
     div.id = "equicord-auth-block";
+    div.style.pointerEvents = "all";
+    div.style.userSelect = "auto";
+
     div.innerHTML = `
         <div style="
             position: fixed;
@@ -54,6 +63,8 @@ function showBlockScreen(hwid: string) {
             align-items: center;
             justify-content: center;
             font-family: gg sans, Noto Sans, sans-serif;
+            pointer-events: all;
+            user-select: none;
         ">
             <div style="
                 background-color: #2b2d31;
@@ -106,6 +117,7 @@ function showBlockScreen(hwid: string) {
                     font-size: 14px;
                     font-weight: 600;
                     cursor: pointer;
+                    pointer-events: all;
                 ">Copy HWID</button>
             </div>
         </div>
@@ -124,7 +136,13 @@ function showBlockScreen(hwid: string) {
 }
 
 function removeBlockScreen() {
-    document.getElementById("equicord-auth-block")?.remove();
+    const el = document.getElementById("equicord-auth-block");
+    if (el) {
+        el.remove();
+        document.documentElement.style.overflow = "";
+        document.body.style.pointerEvents = "";
+        document.body.style.userSelect = "";
+    }
 }
 
 export default definePlugin({
