@@ -15,8 +15,7 @@ on:
                 default: "dev"
 env:
     FORCE_COLOR: true
-    GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-    REPO: realmort/Equicord-devbuild
+    REPO: realmort/Equibored
     USERNAME: GitHub-Actions
 permissions:
     contents: write
@@ -88,15 +87,11 @@ jobs:
                   find release -size 0 -delete
                   rm release/package.json
                   rm release/*.map
-            - name: Upload to Equicord-devbuild
+            - name: Upload Equicord Stable
+              env:
+                  GH_TOKEN: ${{ github.token }}
               run: |
                   BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
-                  COMMIT_SHA=$(git rev-parse --short HEAD)
-                  gh release delete "$BRANCH" --yes --repo realmort/Equicord-devbuild 2>/dev/null || true
-                  gh release create "$BRANCH" \
-                    --title "$BRANCH" \
-                    --notes "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$COMMIT_SHA" \
-                    --repo realmort/Equicord-devbuild \
-                    dist/release/*
-              env:
-                  GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+                  git_hash=$(git rev-parse --short HEAD)
+                  gh release delete latest --yes 2>/dev/null || true
+                  gh release create latest --title "Equicord $git_hash" --notes "" dist/release/*
