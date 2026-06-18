@@ -1,8 +1,10 @@
 name: Build Branches
+
 on:
     push:
         branches:
             - "**"
+            - "!pr-**"
     workflow_dispatch:
         inputs:
             branch:
@@ -13,38 +15,49 @@ on:
                     - dev
                     - translation
                 default: "dev"
+
 env:
     FORCE_COLOR: true
-    REPO: realmort/Equibored
+    GITHUB_TOKEN: ${{ secrets.ETOKEN }}
+    REPO: Equicord/Equibuilds
     USERNAME: GitHub-Actions
+
 permissions:
     contents: write
+
 jobs:
     Build:
         name: Build Equicord
         runs-on: ubuntu-latest
         if: github.repository == 'realmort/Equicord'
+
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   ref: ${{ github.event.inputs.branch || github.ref }}
-            - uses: pnpm/action-setup@v3
+
+            - uses: pnpm/action-setup@v6
               if: github.ref_name != 'bun'
+
             - name: Use Node.js 24
               if: github.ref_name != 'bun'
-              uses: actions/setup-node@v4
+              uses: actions/setup-node@v6
               with:
                   node-version: 24
                   cache: "pnpm"
+
             - name: Install dependencies
               if: github.ref_name != 'bun'
               run: pnpm install --frozen-lockfile
+
             - name: Build web
               if: github.ref_name != 'bun'
               run: pnpm buildWebStandalone
+
             - name: Build
               if: github.ref_name != 'bun'
               run: pnpm buildStandalone
+
             - name: Generate plugin lists
               if: github.ref_name != 'bun'
               run: |
@@ -52,6 +65,7 @@ jobs:
                   pnpm generateEquicordPluginJson dist/equicordplugins.json
                   pnpm generateVencordPluginJson dist/vencordplugins.json
                   pnpm generateDevsList dist/devs.json
+
             - uses: oven-sh/setup-bun@v2
               if: github.ref_name == 'bun'
               with:
@@ -59,12 +73,15 @@ jobs:
             - name: Install dependencies
               if: github.ref_name == 'bun'
               run: bun install
+
             - name: Build web
               if: github.ref_name == 'bun'
               run: bun run buildWebStandalone
+
             - name: Build
               if: github.ref_name == 'bun'
               run: bun run buildStandalone
+
             - name: Generate plugin lists
               if: github.ref_name == 'bun'
               run: |
@@ -72,26 +89,34 @@ jobs:
                   bun run generateEquicordPluginJson dist/equicordplugins.json
                   bun run generateVencordPluginJson dist/vencordplugins.json
                   bun run generateDevsList dist/devs.json
-            - name: Collect files to be released
-              run: |
-                  cd dist
-                  mkdir release
-                  cp browser/browser.* release
-                  cp Equicord.user.{js,js.LEGAL.txt} release
-                  cp *.{json,zip,asar} release
-                  cp desktop/* release
-                  for file in equibop/*; do
-                    filename=$(basename "$file")
-                    cp "$file" "release/equibop${filename^}"
-                  done
-                  find release -size 0 -delete
-                  rm release/package.json
-                  rm release/*.map
-            - name: Upload Equicord Stable
-              env:
-                  GH_TOKEN: ${{ github.token }}
+
+            - name: Upload to Equibuilds repo
+              if: ${{ vars.ACT == 'false' }}
               run: |
                   BRANCH="${{ github.event.inputs.branch || github.ref_name }}"
-                  git_hash=$(git rev-parse --short HEAD)
-                  gh release delete latest --yes 2>/dev/null || true
-                  gh release create latest --title "Equicord $git_hash" --notes "" dist/release/*
+                  COMMIT_SHA=$(git rev-parse --short HEAD)
+
+                  git config --global user.name "GitHub-Actions"
+                  git config --global user.email actions@github.com
+                  git clone https://$USERNAME:$GITHUB_TOKEN@github.com/$REPO.git equibuilds
+                  cd equibuilds
+
+                  if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null 2>&1; then
+                      git checkout "$BRANCH"
+                  else
+                      git checkout --orphan "$BRANCH"
+                  fi
+
+                  cp -r ../dist/* .
+                  find . -size 0 -delete
+
+                  mkdir -p userscript
+                  mv Equicord.user.* userscript/
+                  mv desktop.asar desktop/
+                  mv equibop.asar equibop/
+                  mv extension-*.zip browser/
+
+                  git add -A
+
+                  git commit -m "Builds for https://github.com/$GITHUB_REPOSITORY/commit/$COMMIT_SHA"
+                  git push --force https://$USERNAME:$GITHUB_TOKEN@github.com/$REPO.git "$BRANCH"
