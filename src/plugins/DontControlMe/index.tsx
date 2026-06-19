@@ -129,7 +129,7 @@ function handleVoiceStateUpdate(voiceStates: VoiceState[]) {
         return;
     }
 
-    // Auto undeafen
+    // Auto undeafen:
     if (settings.store.autoUndeafen && myVoiceState.deaf && myVoiceState.guildId) {
         RestAPI.patch({
             url: `/guilds/${myVoiceState.guildId}/members/${myId}`,
@@ -143,7 +143,7 @@ function handleVoiceStateUpdate(voiceStates: VoiceState[]) {
         addCooldown();
     }
 
-    // Auto unmute
+    // Auto unmute:
     if (settings.store.autoUnmute && myVoiceState.mute && myVoiceState.guildId) {
         RestAPI.patch({
             url: `/guilds/${myVoiceState.guildId}/members/${myId}`,
