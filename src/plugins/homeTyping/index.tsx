@@ -5,7 +5,7 @@
  */
 
 import { definePluginSettings } from "@api/Settings";
-import { Devs } from "@utils/constants";
+import { Devs, EquicordDevs } from "@utils/constants";
 import definePlugin, { OptionType } from "@utils/types";
 import { findComponentByCodeLazy, findStoreLazy } from "@webpack";
 import { ColorPicker, Forms, NavigationRouter, Select, SelectedChannelStore, Slider, TypingStore, UserStore, useStateFromStores } from "@webpack/common";
@@ -533,7 +533,7 @@ function removeContainer() {
 export default definePlugin({
     name: "HomeTyping",
     description: "Changes the home button to a typing indicator if someone in your dms is typing, and shows typing notifications",
-    authors: [Devs.Samwich, Devs.viciouscal],
+    authors: [EquicordDevs.Samwich, Devs.viciouscal],
     settings,
 
     TypingIcon() {
